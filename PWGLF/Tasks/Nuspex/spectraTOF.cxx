@@ -80,6 +80,8 @@ std::array<std::shared_ptr<TH2>, NpCharge> hPtNumTOFMatchWithPIDSignalPrm; // Pt
 
 std::array<std::array<std::shared_ptr<TH3>, NpCharge>, 3> hMCpdg_nsigmaTPC; // 2D array of nsigmaTPC histograms [Selection: pi,K,p][True PDG: 18 species]
 
+const bool doprocessFullPar[Np] = {doprocessFullEl, doprocessFullMu, doprocessFullPi, doprocessFullKa, doprocessFullPr, doprocessFullDe, doprocessFullTr, doprocessFullHe, doprocessFullAl};
+
 // Spectra task
 struct tofSpectra {
   struct : ConfigurableGroup {
@@ -588,10 +590,13 @@ struct tofSpectra {
       histos.add("MC/MultiplicityMCINELgt1", "MC multiplicity", kTH1D, {multAxis});
     }
     if (doprocessTrackMCLabels) {
-      for (int par = 2; par <= 4; par++) {
-        for (int i = 0; i < NpCharge; i++) {
-          hMCpdg_nsigmaTPC[par - 2][i] = histos.add<TH3>(Form("test_mclabels/nsigmatpc/%s/%s/pdg_%i", (i < Np) ? "pos" : "neg", pN[par], PDGs[i % Np]), Form("True %s (%i) in %s selection", pTCharge[i], PDGs[i], (i < Np) ? pTCharge[par] : pTCharge[par + Np]), kTH3D, {ptAxis, nsigmaTPCAxisOccupancy, multAxis});
-        }
+			
+      for (int par = 0; par < Np; par++) {
+				if (doprocessFullPar[par]){ //executes only for the enabled particles
+					for (int i = 0; i < NpCharge; i++) {
+						hMCpdg_nsigmaTPC[par - 2][i] = histos.add<TH3>(Form("test_mclabels/nsigmatpc/%s/%s/pdg_%i", (i < Np) ? "pos" : "neg", pN[par], PDGs[i % Np]), Form("True %s (%i) in %s selection", pTCharge[i], PDGs[i], (i < Np) ? pTCharge[par] : pTCharge[par + Np]), kTH3D, {ptAxis, nsigmaTPCAxisOccupancy, multAxis});
+					}
+				}
       }
     }
 
@@ -1610,7 +1615,7 @@ struct tofSpectra {
     for (const auto& track : tracks) {
       // Track selection criteria
       /*   if (track.tpcNClsCrossedRows() < minNCrossedRowsTPC || track.tpcChi2NCl() > maxChi2PerClusterTPC || track.tpcChi2NCl() > maxChi2PerClusterTPC ||
-     track.itsChi2NCl() > maxChi2PerClusterITS || std::abs(track.dcaXY()) > maxDcaXYFactor.value * (0.0105f + 0.0350f / pow(track.pt(), 1.1f)) || std::abs(track.dcaZ()) > maxDcaZ.value || track.eta() < trkselOptions.cfgCutEtaMin || track.eta() > trkselOptions.cfgCutEtaMax || track.tpcCrossedRowsOverFindableCls() < minNCrossedRowsOverFindableClustersTPC || track.tpcNClsFound() < minTPCNClsFound ||
+     track.itsChi2NCl() > maxChi2PerClusterITS || std::abs(track.dcaXY()) > maxDcaXYFactor.value * (0.0105f + 0.0350f / std::pow(track.pt(), 1.1f)) || std::abs(track.dcaZ()) > maxDcaZ.value || track.eta() < trkselOptions.cfgCutEtaMin || track.eta() > trkselOptions.cfgCutEtaMax || track.tpcCrossedRowsOverFindableCls() < minNCrossedRowsOverFindableClustersTPC || track.tpcNClsFound() < minTPCNClsFound ||
      !(o2::aod::track::ITSrefit) || !(o2::aod::track::TPCrefit)) {
      continue;
  }*/
@@ -1990,7 +1995,7 @@ struct tofSpectra {
               const int charmOrigin = RecoDecay::getCharmHadronOrigin(mcParticles, mcParticle, false);
               for (const auto& mother : mcParticle.template mothers_as<aod::McParticles>()) {
                 const int motherPdgCode = std::abs(mother.pdgCode());
-                if (motherPdgCode == 421) {
+                if (motherPdgCode == kD0) {
                   IsD0Mother = true;
                 }
                 if (charmOrigin == RecoDecay::OriginType::NonPrompt) {
