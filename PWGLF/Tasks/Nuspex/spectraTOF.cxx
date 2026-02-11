@@ -80,10 +80,15 @@ std::array<std::shared_ptr<TH2>, NpCharge> hPtNumTOFMatchWithPIDSignalPrm; // Pt
 
 std::array<std::array<std::shared_ptr<TH3>, NpCharge>, 3> hMCPdgNsigmaTPC; // 2D array of nsigmaTPC histograms [Selection: pi,K,p][True PDG: 18 species]
 
-const bool doprocessFullPar[Np] = {doprocessFullEl, doprocessFullMu, doprocessFullPi, doprocessFullKa, doprocessFullPr, doprocessFullDe, doprocessFullTr, doprocessFullHe, doprocessFullAl};
+static const bool doprocessFullParticle[Np] = {doprocessFullEl, doprocessFullMu, doprocessFullPi, doprocessFullKa, doprocessFullPr, doprocessFullDe, doprocessFullTr, doprocessFullHe, doprocessFullAl};
+
+static const bool doprocessLfFullParticle[Np] = {doprocessLfFullEl, doprocessLfFullMu, doprocessLfFullPi, doprocessLfFullKa, doprocessLfFullPr, doprocessLfFullDe, doprocessLfFullTr, doprocessLfFullHe, doprocessLfFullAl};
 
 // Spectra task
 struct SpectraTOF {
+	static constexpr int kEvSelInelGt0Cut = 1;
+	static constexpr int kEvSelInelGt1Cut = 2;
+	
   struct : ConfigurableGroup {
     Configurable<float> cfgCutVertex{"cfgCutVertex", 10.0f, "Accepted z-vertex range"};
     Configurable<int> cfgINELCut{"cfgINELCut", 0, "INEL event selection: 0 no sel, 1 INEL>0, 2 INEL>1"};
@@ -299,22 +304,42 @@ struct SpectraTOF {
 
     histos.add("event/vertexz", "", HistType::kTH1D, {vtxZAxis});
     histos.add("test_occupancy/event/vertexz", "", HistType::kTH1D, {vtxZAxis});
+		
+		enum EEvSelBin {
+			kEventsRead = 1,
+			kInelGt0Frac,
+			kInelGt1Frac,
+			kEvSelPassed,
+			kNoITSROFrameBorder1,
+			kNoITSROFrameBorder2,
+			kNoSameBunchPileup,
+			kIsGoodZvtxFT0vsPV,
+			kIsVertexITSTPC,
+			kNoTimeFrameBorder,
+			kInelGt0FracRepeat,
+			kInelGt1FracRepeat,
+			kPosZPassed,
+			kInelGt0Final,
+			kInelGt1Final
+		}
+		
     auto h = histos.add<TH1>("evsel", "evsel", HistType::kTH1D, {{20, 0.5, 20.5}});
-    h->GetXaxis()->SetBinLabel(1, "Events read");
-    h->GetXaxis()->SetBinLabel(2, "INEL>0 (fraction)");
-    h->GetXaxis()->SetBinLabel(3, "INEL>1 (fraction)");
-    h->GetXaxis()->SetBinLabel(4, "Ev. sel. passed");
-    h->GetXaxis()->SetBinLabel(5, "NoITSROFrameBorder");
-    h->GetXaxis()->SetBinLabel(6, "NoITSROFrameBorder");
-    h->GetXaxis()->SetBinLabel(7, "NoSameBunchPileup");
-    h->GetXaxis()->SetBinLabel(8, "IsGoodZvtxFT0vsPV");
-    h->GetXaxis()->SetBinLabel(9, "IsVertexITSTPC");
-    h->GetXaxis()->SetBinLabel(10, "NoTimeFrameBorder");
-    h->GetXaxis()->SetBinLabel(11, "INEL>0 (fraction)");
-    h->GetXaxis()->SetBinLabel(12, "INEL>1 (fraction)");
-    h->GetXaxis()->SetBinLabel(13, "posZ passed");
-    h->GetXaxis()->SetBinLabel(14, evselOptions.cfgINELCut.value == 1 ? "INEL>0" : "INEL>0 (fraction)");
-    h->GetXaxis()->SetBinLabel(15, evselOptions.cfgINELCut.value == 2 ? "INEL>1" : "INEL>1 (fraction)");
+		
+    h->GetXaxis()->SetBinLabel(kEventsRead, "Events read");
+    h->GetXaxis()->SetBinLabel(kInelGt0Frac, "INEL>0 (fraction)");
+    h->GetXaxis()->SetBinLabel(kInelGt1Frac, "INEL>1 (fraction)");
+    h->GetXaxis()->SetBinLabel(kEvSelPassed, "Ev. sel. passed");
+    h->GetXaxis()->SetBinLabel(kNoITSROFrameBorder1, "NoITSROFrameBorder");
+    h->GetXaxis()->SetBinLabel(kNoITSROFrameBorder2, "NoITSROFrameBorder");
+    h->GetXaxis()->SetBinLabel(kNoSameBunchPileup, "NoSameBunchPileup");
+    h->GetXaxis()->SetBinLabel(kIsGoodZvtxFT0vsPV, "IsGoodZvtxFT0vsPV");
+    h->GetXaxis()->SetBinLabel(kIsVertexITSTPC, "IsVertexITSTPC");
+    h->GetXaxis()->SetBinLabel(kNoTimeFrameBorder, "NoTimeFrameBorder");
+    h->GetXaxis()->SetBinLabel(kInelGt0FracRepeat, "INEL>0 (fraction)");
+    h->GetXaxis()->SetBinLabel(kInelGt1FracRepeat, "INEL>1 (fraction)");
+    h->GetXaxis()->SetBinLabel(kPosZPassed, "posZ passed");
+    h->GetXaxis()->SetBinLabel(kInelGt0Final, evselOptions.cfgINELCut.value == kEvSelInelGt0Cut ? "INEL>0" : "INEL>0 (fraction)");
+    h->GetXaxis()->SetBinLabel(kInelGt1Final, evselOptions.cfgINELCut.value == kEvSelInelGt1Cut ? "INEL>1" : "INEL>1 (fraction)");
 
     h = histos.add<TH1>("tracksel", "tracksel", HistType::kTH1D, {{10, 0.5, 10.5}});
     h->GetXaxis()->SetBinLabel(1, "Tracks read");
@@ -592,7 +617,7 @@ struct SpectraTOF {
     if (doprocessTrackMCLabels) {
 			
       for (int par = 0; par < Np; par++) {
-				if (doprocessFullPar[par]){ //executes only for the enabled particles
+				if (doprocessFullParticle[par]){ //executes only for the enabled particles
 					for (int i = 0; i < NpCharge; i++) {
 						hMCPdgNsigmaTPC[par - 2][i] = histos.add<TH3>(Form("test_mclabels/nsigmatpc/%s/%s/pdg_%i", (i < Np) ? "pos" : "neg", pN[par], PDGs[i % Np]), Form("True %s (%i) in %s selection", pTCharge[i], PDGs[i], (i < Np) ? pTCharge[par] : pTCharge[par + Np]), kTH3D, {ptAxis, nsigmaTPCAxisOccupancy, multAxis});
 					}
@@ -1058,12 +1083,17 @@ struct SpectraTOF {
       }
     }
     // Filling DCA info with the TPC+TOF PID
-    bool isDCAPureSample = (std::sqrt(nsigmaTOF * nsigmaTOF + nsigmaTPC * nsigmaTPC) < 2.f);
-    if (track.pt() <= 0.4) {
-      isDCAPureSample = (nsigmaTPC < 1.f);
+		static constexpr float kDcaMaxCombinedSigma = 2.f;
+		static constexpr float kDcaMaxTPCSigma = 1.f;
+		static constexpr float kDcaTrkPtCut = 0.4f;
+		static constexpr float kDcaPhiPtMin = 0.9f;
+		static constexpr float kDcaPhiPtMax = 1.1f;
+    bool isDCAPureSample = (std::sqrt(nsigmaTOF * nsigmaTOF + nsigmaTPC * nsigmaTPC) < kDcaMaxCombinedSigma);
+    if (track.pt() <= kDcaTrkPtCut) {
+      isDCAPureSample = (nsigmaTPC < kDcaMaxTPCSigma);
     }
     if (isDCAPureSample) {
-      const bool isInPtRangeForPhi = track.pt() < 1.1f && track.pt() > 0.9f;
+      const bool isInPtRangeForPhi = track.pt() < kDcaPhiPtMax && track.pt() > kDcaPhiPtMin;
       if (enableDCAxyzHistograms) {
         if (track.sign() > 0) {
           hDcaXYZ[id]->Fill(track.pt(), track.dcaXY(), track.dcaZ());
@@ -1183,12 +1213,12 @@ struct SpectraTOF {
       histos.fill(HIST("evsel"), 13.f);
       if (collision.isInelGt0()) {
         histos.fill(HIST("evsel"), 14.f);
-      } else if (evselOptions.cfgINELCut == 1) {
+      } else if (evselOptions.cfgINELCut == kEvSelInelGt0Cut) {
         return false;
       }
       if (collision.isInelGt1()) {
         histos.fill(HIST("evsel"), 15.f);
-      } else if (evselOptions.cfgINELCut == 2) {
+      } else if (evselOptions.cfgINELCut == kEvSelInelGt1Cut) {
         return false;
       }
       histos.fill(HIST("event/vertexz"), collision.posZ());
@@ -1412,12 +1442,16 @@ struct SpectraTOF {
     return true;
   }
 
+	static constexpr int kItsMaxLayer = 7; //bit runs from 0-6
+	static constexpr int kTrdBit = 10;
+	static constexpr int kTofBit = 11;
+	static constexpr int kGlobalMismatchBit = 15;
   template <typename ParticleType>
   bool isMismatchedTrack(const ParticleType& track, const int detector)
   {
     switch (detector) {
       case 0: // ITS
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < kItsMaxLayer; i++) {
           if (track.mcMask() & 1 << i) {
             return true;
           }
@@ -1425,26 +1459,26 @@ struct SpectraTOF {
         return false;
         break;
       case 1: // TPC
-        for (int i = 7; i < 10; i++) {
+        for (int i = kItsMaxLayer; i < kTrdBit; i++) {
           if (track.mcMask() & 1 << i) {
             return true;
           }
         }
         break;
       case 2: // TRD
-        if (track.mcMask() & 1 << 10) {
+        if (track.mcMask() & 1 << kTrdBit) {
           return true;
         }
         return false;
         break;
       case 3: // TOF
-        if (track.mcMask() & 1 << 11) {
+        if (track.mcMask() & 1 << kTofBit) {
           return true;
         }
         return false;
         break;
       default: // All
-        if (track.mcMask() & 1 << 15) {
+        if (track.mcMask() & 1 << kGlobalMismatchBit) {
           return true;
         }
         return false;
@@ -1478,7 +1512,7 @@ struct SpectraTOF {
         continue;
       }
       // trackwoCut++;
-      if (std::abs(track.dcaXY()) > 0.05) { // Skipping tracks that don't pass the standard cuts
+      if (!passesDCAxyCut(track)) { // Skipping tracks that don't pass the standard cuts
         return;
       }
 
@@ -1855,45 +1889,11 @@ struct SpectraTOF {
   template <std::size_t id>
   bool isParticleEnabled()
   {
-    if constexpr (id == 0 || id == Np) {
-      if (doprocessFullEl == true || doprocessLfFullEl == true) {
-        return true;
-      }
-    } else if constexpr (id == 1 || id == Np + 1) {
-      if (doprocessFullMu == true || doprocessLfFullMu == true) {
-        return true;
-      }
-    } else if constexpr (id == 2 || id == Np + 2) {
-      if (doprocessFullPi == true || doprocessLfFullPi == true) {
-        return true;
-      }
-    } else if constexpr (id == 3 || id == Np + 3) {
-      if (doprocessFullKa == true || doprocessLfFullKa == true) {
-        return true;
-      }
-    } else if constexpr (id == 4 || id == Np + 4) {
-      if (doprocessFullPr == true || doprocessLfFullPr == true) {
-        return true;
-      }
-    } else if constexpr (id == 5 || id == Np + 5) {
-      if (doprocessFullDe == true || doprocessLfFullDe == true) {
-        return true;
-      }
-    } else if constexpr (id == 6 || id == Np + 6) {
-      if (doprocessFullTr == true || doprocessLfFullTr == true) {
-        return true;
-      }
-    } else if constexpr (id == 7 || id == Np + 7) {
-      if (doprocessFullHe == true || doprocessLfFullHe == true) {
-        return true;
-      }
-    } else if constexpr (id == 8 || id == Np + 8) {
-      if (doprocessFullAl == true || doprocessLfFullAl == true) {
-        return true;
-      }
-    } else {
-      LOG(fatal) << "Unknown particle id: " << id;
-    }
+		static_assert(id < 2 * Np, "Unknown particle id!");
+		constexpr std::size_t idx = id % Np;
+		if (doprocessFullParticle[idx] || doprocessLfFullParticle[idx]){
+			return true;
+		}
     return false;
   }
 
@@ -1933,9 +1933,9 @@ struct SpectraTOF {
       const auto& nsigmaTOFKa = o2::aod::pidutils::tofNSigma<3>(track);
 
       // Filling DCA info with the TPC+TOF PID
-      bool isDCAPureSample = (std::sqrt(nsigmaTOFKa * nsigmaTOFKa + nsigmaTPCKa * nsigmaTPCKa) < 2.f);
-      if (track.pt() <= 0.4) {
-        isDCAPureSample = (nsigmaTPCKa < 1.f);
+      bool isDCAPureSample = (std::sqrt(nsigmaTOFKa * nsigmaTOFKa + nsigmaTPCKa * nsigmaTPCKa) < kDcaMaxCombinedSigma);
+      if (track.pt() <= kDcaTrkPtCut) {
+        isDCAPureSample = (nsigmaTPCKa < kDcaMaxTPCSigma);
       }
 
       if (isDCAPureSample) {
@@ -1945,7 +1945,7 @@ struct SpectraTOF {
         }
 
         if (!mcParticle.isPhysicalPrimary()) { // Secondaries (weak decays and material)
-          if (mcParticle.getProcess() == 4) {  // Particles from decay
+          if (mcParticle.getProcess() == kPDecay) {  // Particles from decay
             if (enableDCAxyzHistograms) {
               hDcaXYZStr[i]->Fill(track.pt(), track.dcaXY(), track.dcaZ());
             } else {
@@ -2052,7 +2052,7 @@ struct SpectraTOF {
       }
     } else {
       if (!mcParticle.isPhysicalPrimary()) {
-        if (mcParticle.getProcess() == 4) {
+        if (mcParticle.getProcess() == kPDecay) {
           histos.fill(HIST(hdcaxystr[i]), track.pt(), track.dcaXY());
         } else {
           histos.fill(HIST(hdcaxymat[i]), track.pt(), track.dcaXY());
@@ -2064,7 +2064,7 @@ struct SpectraTOF {
 
     if ((collision.has_mcCollision() && (mcParticle.mcCollisionId() != collision.mcCollisionId())) || !collision.has_mcCollision()) {
       if (!mcParticle.isPhysicalPrimary()) {
-        if (mcParticle.getProcess() == 4) {
+        if (mcParticle.getProcess() == kPDecay) {
           hDcaXYWrongCollisionStr[i]->Fill(track.pt(), track.dcaXY());
         } else {
           hDcaXYWrongCollisionMat[i]->Fill(track.pt(), track.dcaXY());
@@ -2095,7 +2095,7 @@ struct SpectraTOF {
     const bool isProtonTOF = std::abs(nsigmaTOFPr) < trkselOptions.cfgCutNsigma;
 
     if (!mcParticle.isPhysicalPrimary()) { // Is not physical primary
-      if (mcParticle.getProcess() == 4) {  // Is from decay
+      if (mcParticle.getProcess() == kPDecay) {  // Is from decay
         if (includeCentralityMC) {
           if (includeCentralityMC) {
             histos.fill(HIST(hpt_num_str[i]), track.pt(), multiplicity, track.dcaXY());
@@ -2138,7 +2138,7 @@ struct SpectraTOF {
           if (isImpactParam) {
             histos.fill(HIST("MC/withPID/pr/pos/prm/pt/num"), track.pt(), impParam);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/pr/pos/prm/pt/num_str"), track.pt(), impParam);
               } else {
                 histos.fill(HIST("MC/withPID/pr/pos/prm/pt/num_mat"), track.pt(), impParam);
@@ -2147,7 +2147,7 @@ struct SpectraTOF {
           } else {
             histos.fill(HIST("MC/withPID/pr/pos/prm/pt/num"), track.pt(), multiplicity);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/pr/pos/prm/pt/num_str"), track.pt(), multiplicity);
               } else {
                 histos.fill(HIST("MC/withPID/pr/pos/prm/pt/num_mat"), track.pt(), multiplicity);
@@ -2158,7 +2158,7 @@ struct SpectraTOF {
           if (isImpactParam) {
             histos.fill(HIST("MC/withPID/pr/neg/prm/pt/num"), track.pt(), impParam);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/pr/neg/prm/pt/num_str"), track.pt(), impParam);
               } else {
                 histos.fill(HIST("MC/withPID/pr/neg/prm/pt/num_mat"), track.pt(), impParam);
@@ -2167,7 +2167,7 @@ struct SpectraTOF {
           } else {
             histos.fill(HIST("MC/withPID/pr/neg/prm/pt/num"), track.pt(), multiplicity);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/pr/neg/prm/pt/num_str"), track.pt(), multiplicity);
               } else {
                 histos.fill(HIST("MC/withPID/pr/neg/prm/pt/num_mat"), track.pt(), multiplicity);
@@ -2178,7 +2178,7 @@ struct SpectraTOF {
           if (isImpactParam) {
             histos.fill(HIST("MC/withPID/pi/pos/prm/pt/num"), track.pt(), impParam);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/pi/pos/prm/pt/num_str"), track.pt(), impParam);
               } else {
                 histos.fill(HIST("MC/withPID/pi/pos/prm/pt/num_mat"), track.pt(), impParam);
@@ -2187,7 +2187,7 @@ struct SpectraTOF {
           } else {
             histos.fill(HIST("MC/withPID/pi/pos/prm/pt/num"), track.pt(), multiplicity);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/pi/pos/prm/pt/num_str"), track.pt(), multiplicity);
               } else {
                 histos.fill(HIST("MC/withPID/pi/pos/prm/pt/num_mat"), track.pt(), multiplicity);
@@ -2198,7 +2198,7 @@ struct SpectraTOF {
           if (isImpactParam) {
             histos.fill(HIST("MC/withPID/pi/neg/prm/pt/num"), track.pt(), impParam);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/pi/neg/prm/pt/num_str"), track.pt(), impParam);
               } else {
                 histos.fill(HIST("MC/withPID/pi/neg/prm/pt/num_mat"), track.pt(), impParam);
@@ -2207,7 +2207,7 @@ struct SpectraTOF {
           } else {
             histos.fill(HIST("MC/withPID/pi/neg/prm/pt/num"), track.pt(), multiplicity);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/pi/neg/prm/pt/num_str"), track.pt(), multiplicity);
               } else {
                 histos.fill(HIST("MC/withPID/pi/neg/prm/pt/num_mat"), track.pt(), multiplicity);
@@ -2218,7 +2218,7 @@ struct SpectraTOF {
           if (isImpactParam) {
             histos.fill(HIST("MC/withPID/ka/pos/prm/pt/num"), track.pt(), impParam);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/ka/pos/prm/pt/num_str"), track.pt(), impParam);
               } else {
                 histos.fill(HIST("MC/withPID/ka/pos/prm/pt/num_mat"), track.pt(), impParam);
@@ -2227,7 +2227,7 @@ struct SpectraTOF {
           } else {
             histos.fill(HIST("MC/withPID/ka/pos/prm/pt/num"), track.pt(), multiplicity);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/ka/pos/prm/pt/num_str"), track.pt(), multiplicity);
               } else {
                 histos.fill(HIST("MC/withPID/ka/pos/prm/pt/num_mat"), track.pt(), multiplicity);
@@ -2238,7 +2238,7 @@ struct SpectraTOF {
           if (isImpactParam) {
             histos.fill(HIST("MC/withPID/ka/neg/prm/pt/num"), track.pt(), impParam);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/ka/neg/prm/pt/num_str"), track.pt(), impParam);
               } else {
                 histos.fill(HIST("MC/withPID/ka/neg/prm/pt/num_mat"), track.pt(), impParam);
@@ -2247,7 +2247,7 @@ struct SpectraTOF {
           } else {
             histos.fill(HIST("MC/withPID/ka/neg/prm/pt/num"), track.pt(), multiplicity);
             if (!mcParticle.isPhysicalPrimary()) {
-              if (mcParticle.getProcess() == 4) {
+              if (mcParticle.getProcess() == kPDecay) {
                 histos.fill(HIST("MC/withPID/ka/neg/prm/pt/num_str"), track.pt(), multiplicity);
               } else {
                 histos.fill(HIST("MC/withPID/ka/neg/prm/pt/num_mat"), track.pt(), multiplicity);
@@ -2424,7 +2424,7 @@ struct SpectraTOF {
     }
 
     if (!mcParticle.isPhysicalPrimary()) {
-      if (mcParticle.getProcess() == 4) {
+      if (mcParticle.getProcess() == kPDecay) {
         histos.fill(HIST(hpt_den_str[i]), mcParticle.pt(), multiplicity);
       } else {
         histos.fill(HIST(hpt_den_mat[i]), mcParticle.pt(), multiplicity);
@@ -2603,12 +2603,12 @@ struct SpectraTOF {
       }
       const auto& mcCollision = collision.mcCollision_as<GenMCCollisions>();
       const auto& particlesInCollision = mcParticles.sliceByCached(aod::mcparticle::mcCollisionId, mcCollision.globalIndex(), cache);
-      if (evselOptions.cfgINELCut.value == 1) {
+      if (evselOptions.cfgINELCut.value == kEvSelInelGt0Cut) {
         if (!o2::pwglf::isINELgt0mc(particlesInCollision, pdgDB)) {
           continue;
         }
       }
-      if (evselOptions.cfgINELCut.value == 2) {
+      if (evselOptions.cfgINELCut.value == kEvSelInelGt1Cut) {
         if (!o2::pwglf::isINELgt1mc(particlesInCollision, pdgDB)) {
           continue;
         }
@@ -2636,13 +2636,13 @@ struct SpectraTOF {
       const auto& particlesInCollision = mcParticles.sliceByCached(aod::mcparticle::mcCollisionId, mcCollision.globalIndex(), cache);
       bool hasParticleInFT0C = false;
       bool hasParticleInFT0A = false;
-      if (evselOptions.cfgINELCut.value == 1) {
+      if (evselOptions.cfgINELCut.value == kEvSelInelGt0Cut) {
         if (!o2::pwglf::isINELgt0mc(particlesInCollision, pdgDB)) {
           continue;
         }
       }
       histos.fill(HIST("MC/MultiplicityMCINELgt0"), getMultiplicityMC(mcCollision));
-      if (evselOptions.cfgINELCut.value == 2) {
+      if (evselOptions.cfgINELCut.value == kEvSelInelGt1Cut) {
         if (!o2::pwglf::isINELgt1mc(particlesInCollision, pdgDB)) {
           continue;
         }
@@ -2719,15 +2719,15 @@ struct SpectraTOF {
       const float multiplicity = mcCollision.impactParameter();
 
       for (const auto& track : tracks) {
-        if (track.tpcNClsCrossedRows() < 70 ||
-            track.tpcChi2NCl() > 4 ||
-            track.tpcChi2NCl() < 0.5 ||
-            track.itsChi2NCl() > 36 ||
-            std::abs(track.dcaXY()) > 0.05 ||
-            std::abs(track.dcaZ()) > 2.0 ||
-            std::abs(track.eta()) > 0.8 ||
-            track.tpcCrossedRowsOverFindableCls() < 0.8 ||
-            track.tpcNClsFound() < 100 ||
+        if (track.tpcNClsCrossedRows() < minNCrossedRowsTPC ||
+            track.tpcChi2NCl() > maxChi2PerClusterTPC ||
+            track.tpcChi2NCl() < minChi2PerClusterTPC ||
+            track.itsChi2NCl() > maxChi2PerClusterITS ||
+            !passesDCAxyCut(track) ||
+            std::abs(track.dcaZ()) > maxDcaZ ||
+            std::abs(track.eta()) > cfgCutEtaMax ||
+            track.tpcCrossedRowsOverFindableCls() < minNCrossedRowsOverFindableClustersTPC ||
+            track.tpcNClsFound() < minTPCNClsFound ||
             !(o2::aod::track::TPCrefit) ||
             !(o2::aod::track::ITSrefit)) {
           continue;
