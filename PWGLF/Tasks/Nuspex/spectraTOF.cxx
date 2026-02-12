@@ -598,7 +598,7 @@ struct SpectraTOF {
           histos.add("MC/test/RecoEvs/pr/neg/prm/pt/numtof", "generated MC #bar{p} from recons. events", kTHnSparseD, {ptAxis, impParamAxis});
         }
       }
-			auto hh = histos.add<TH1>("MC/GenRecoCollisions", "Generated and Reconstructed MC Collisions", kTH1D, {{10, 0.5, 10.5}});
+      auto hh = histos.add<TH1>("MC/GenRecoCollisions", "Generated and Reconstructed MC Collisions", kTH1D, {{10, 0.5, 10.5}});
       hh->GetXaxis()->SetBinLabel(1, "Collisions generated");
       hh->GetXaxis()->SetBinLabel(2, "Collisions reconstructed");
       hh->GetXaxis()->SetBinLabel(3, "INEL>0");
