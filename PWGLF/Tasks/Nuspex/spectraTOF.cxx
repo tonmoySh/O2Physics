@@ -319,8 +319,7 @@ struct SpectraTOF {
       kPosZPassed,
       kInelGt0Final,
       kInelGt1Final
-    }
-    auto h = histos.add<TH1>("evsel", "evsel", HistType::kTH1D, {{20, 0.5, 20.5}});
+    } auto h = histos.add<TH1>("evsel", "evsel", HistType::kTH1D, {{20, 0.5, 20.5}});
     h->GetXaxis()->SetBinLabel(kEventsRead, "Events read");
     h->GetXaxis()->SetBinLabel(kInelGt0Frac, "INEL>0 (fraction)");
     h->GetXaxis()->SetBinLabel(kInelGt1Frac, "INEL>1 (fraction)");
@@ -598,8 +597,7 @@ struct SpectraTOF {
           histos.add("MC/test/RecoEvs/pr/pos/prm/pt/numtof", "generated MC p from recons. events", kTHnSparseD, {ptAxis, impParamAxis});
           histos.add("MC/test/RecoEvs/pr/neg/prm/pt/numtof", "generated MC #bar{p} from recons. events", kTHnSparseD, {ptAxis, impParamAxis});
         }
-      }
-      auto hh = histos.add<TH1>("MC/GenRecoCollisions", "Generated and Reconstructed MC Collisions", kTH1D, {{10, 0.5, 10.5}});
+      } auto hh = histos.add<TH1>("MC/GenRecoCollisions", "Generated and Reconstructed MC Collisions", kTH1D, {{10, 0.5, 10.5}});
       hh->GetXaxis()->SetBinLabel(1, "Collisions generated");
       hh->GetXaxis()->SetBinLabel(2, "Collisions reconstructed");
       hh->GetXaxis()->SetBinLabel(3, "INEL>0");
