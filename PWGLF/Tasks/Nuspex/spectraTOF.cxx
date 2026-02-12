@@ -2820,7 +2820,7 @@ struct SpectraTOF {
       const auto& mcLabel = mcTrackLabels.iteratorAt(track.globalIndex());
       const auto& mcParticle = mcParticles.iteratorAt(mcLabel.mcParticleId());
       int pdgCode = mcParticle.pdgCode();
-      static_for<2, 4>([&](auto par) {
+      static_for<2, 4>([&](auto par) { //for pi, K, p only
         const auto& nsigmaTPCpar = o2::aod::pidutils::tpcNSigma<par>(track);
         bool isTPCpar = std::abs(nsigmaTPCpar) < trkselOptions.cfgCutNsigma;
         // Precompute rapidity values to avoid redundant calculations
