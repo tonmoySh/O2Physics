@@ -86,9 +86,8 @@ static const bool doprocessLfFullParticle[Np] = {doprocessLfFullEl, doprocessLfF
 
 // Spectra task
 struct SpectraTOF {
-	static constexpr int EvSelInelGt0Cut = 1;
-	static constexpr int EvSelInelGt1Cut = 2;
-	
+  static constexpr int EvSelInelGt0Cut = 1;
+  static constexpr int EvSelInelGt1Cut = 2;
   struct : ConfigurableGroup {
     Configurable<float> cfgCutVertex{"cfgCutVertex", 10.0f, "Accepted z-vertex range"};
     Configurable<int> cfgINELCut{"cfgINELCut", 0, "INEL event selection: 0 no sel, 1 INEL>0, 2 INEL>1"};
@@ -304,27 +303,24 @@ struct SpectraTOF {
 
     histos.add("event/vertexz", "", HistType::kTH1D, {vtxZAxis});
     histos.add("test_occupancy/event/vertexz", "", HistType::kTH1D, {vtxZAxis});
-		
-		enum EEvSelBin {
-			kEventsRead = 1,
-			kInelGt0Frac,
-			kInelGt1Frac,
-			kEvSelPassed,
-			kNoITSROFrameBorder1,
-			kNoITSROFrameBorder2,
-			kNoSameBunchPileup,
-			kIsGoodZvtxFT0vsPV,
-			kIsVertexITSTPC,
-			kNoTimeFrameBorder,
-			kInelGt0FracRepeat,
-			kInelGt1FracRepeat,
-			kPosZPassed,
-			kInelGt0Final,
-			kInelGt1Final
-		}
-		
+    enum EEvSelBin {
+      kEventsRead = 1,
+      kInelGt0Frac,
+      kInelGt1Frac,
+      kEvSelPassed,
+      kNoITSROFrameBorder1,
+      kNoITSROFrameBorder2,
+      kNoSameBunchPileup,
+      kIsGoodZvtxFT0vsPV,
+      kIsVertexITSTPC,
+      kNoTimeFrameBorder,
+      kInelGt0FracRepeat,
+      kInelGt1FracRepeat,
+      kPosZPassed,
+      kInelGt0Final,
+      kInelGt1Final
+    }
     auto h = histos.add<TH1>("evsel", "evsel", HistType::kTH1D, {{20, 0.5, 20.5}});
-		
     h->GetXaxis()->SetBinLabel(kEventsRead, "Events read");
     h->GetXaxis()->SetBinLabel(kInelGt0Frac, "INEL>0 (fraction)");
     h->GetXaxis()->SetBinLabel(kInelGt1Frac, "INEL>1 (fraction)");
@@ -615,13 +611,12 @@ struct SpectraTOF {
       histos.add("MC/MultiplicityMCINELgt1", "MC multiplicity", kTH1D, {multAxis});
     }
     if (doprocessTrackMCLabels) {
-			
       for (int par = 0; par < Np; par++) {
-				if (doprocessFullParticle[par]){ //executes only for the enabled particles
-					for (int i = 0; i < NpCharge; i++) {
-						hMCPdgNsigmaTPC[par - 2][i] = histos.add<TH3>(Form("test_mclabels/nsigmatpc/%s/%s/pdg_%i", (i < Np) ? "pos" : "neg", pN[par], PDGs[i % Np]), Form("True %s (%i) in %s selection", pTCharge[i], PDGs[i], (i < Np) ? pTCharge[par] : pTCharge[par + Np]), kTH3D, {ptAxis, nsigmaTPCAxisOccupancy, multAxis});
-					}
-				}
+        if (doprocessFullParticle[par]) { // executes only for the enabled particles
+          for (int i = 0; i < NpCharge; i++) {
+            hMCPdgNsigmaTPC[par - 2][i] = histos.add<TH3>(Form("test_mclabels/nsigmatpc/%s/%s/pdg_%i", (i < Np) ? "pos" : "neg", pN[par], PDGs[i % Np]), Form("True %s (%i) in %s selection", pTCharge[i], PDGs[i], (i < Np) ? pTCharge[par] : pTCharge[par + Np]), kTH3D, {ptAxis, nsigmaTPCAxisOccupancy, multAxis});
+          }
+        }
       }
     }
 
@@ -1083,11 +1078,11 @@ struct SpectraTOF {
       }
     }
     // Filling DCA info with the TPC+TOF PID
-		static constexpr float DcaMaxCombinedSigma = 2.f;
-		static constexpr float DcaMaxTPCSigma = 1.f;
-		static constexpr float DcaTrkPtCut = 0.4f;
-		static constexpr float DcaPhiPtMin = 0.9f;
-		static constexpr float DcaPhiPtMax = 1.1f;
+    static constexpr float DcaMaxCombinedSigma = 2.f;
+    static constexpr float DcaMaxTPCSigma = 1.f;
+    static constexpr float DcaTrkPtCut = 0.4f;
+    static constexpr float DcaPhiPtMin = 0.9f;
+    static constexpr float DcaPhiPtMax = 1.1f;
     bool isDCAPureSample = (std::sqrt(nsigmaTOF * nsigmaTOF + nsigmaTPC * nsigmaTPC) < DcaMaxCombinedSigma);
     if (track.pt() <= DcaTrkPtCut) {
       isDCAPureSample = (nsigmaTPC < DcaMaxTPCSigma);
@@ -1442,10 +1437,10 @@ struct SpectraTOF {
     return true;
   }
 
-	static constexpr int ItsMaxLayer = 7; //bit runs from 0-6
-	static constexpr int TrdBit = 10;
-	static constexpr int TofBit = 11;
-	static constexpr int GlobalMismatchBit = 15;
+  static constexpr int ItsMaxLayer = 7; // bit runs from 0-6
+  static constexpr int TrdBit = 10;
+  static constexpr int TofBit = 11;
+  static constexpr int GlobalMismatchBit = 15;
   template <typename ParticleType>
   bool isMismatchedTrack(const ParticleType& track, const int detector)
   {
@@ -1762,7 +1757,7 @@ struct SpectraTOF {
   } // end of the process function
   PROCESS_SWITCH(SpectraTOF, processDerived, "Derived data processor", false);
 
-#define MAKE_PROCESS_FUNCTION(processorName, inputPid, particleId, isFull, tofTable, tpcTable)   \
+#define MAKE_PROCESS_FUNCTION(processorName, inputPid, particleId, isFull, tofTable, tpcTable) \
   void process##processorName##inputPid(CollisionCandidates::iterator const& collision,        \
                                         soa::Join<TrackCandidates,                             \
                                                   aod::pid##tofTable##inputPid,                \
@@ -1889,20 +1884,20 @@ struct SpectraTOF {
   template <std::size_t id>
   bool isParticleEnabled()
   {
-		static_assert(id < NpCharge, "Unknown particle id!");
-		constexpr std::size_t Idx = id % Np;
-		if (doprocessFullParticle[Idx] || doprocessLfFullParticle[Idx]){
-			return true;
-		}
+    static_assert(id < NpCharge, "Unknown particle id!");
+    constexpr std::size_t Idx = id % Np;
+    if (doprocessFullParticle[Idx] || doprocessLfFullParticle[Idx]) {
+      return true;
+    }
     return false;
   }
 
   using RecoMCCollisions = soa::Join<aod::Collisions, aod::McCollisionLabels, aod::EvSels, aod::CentFT0As, aod::CentFT0Cs, aod::TPCMults, aod::PVMults, aod::MultZeqs, aod::CentFT0Ms>; // RD
   template <std::size_t i, typename TrackType, typename ParticleType>
   void fillTrackHistogramsMC(TrackType const& track,
-                              ParticleType::iterator const& mcParticle,
-                              RecoMCCollisions::iterator const& collision,
-                              ParticleType const& mcParticles)
+                             ParticleType::iterator const& mcParticle,
+                             RecoMCCollisions::iterator const& collision,
+                             ParticleType const& mcParticles)
   {
     if (!isParticleEnabled<i>()) { // Check if the particle is enabled
       return;
@@ -1944,8 +1939,8 @@ struct SpectraTOF {
           hDcaZMC[i]->Fill(track.pt(), track.dcaZ());
         }
 
-        if (!mcParticle.isPhysicalPrimary()) { // Secondaries (weak decays and material)
-          if (mcParticle.getProcess() == kPDecay) {  // Particles from decay
+        if (!mcParticle.isPhysicalPrimary()) {      // Secondaries (weak decays and material)
+          if (mcParticle.getProcess() == kPDecay) { // Particles from decay
             if (enableDCAxyzHistograms) {
               hDcaXYZStr[i]->Fill(track.pt(), track.dcaXY(), track.dcaZ());
             } else {
@@ -2094,8 +2089,8 @@ struct SpectraTOF {
     const bool isKaonTOF = std::abs(nsigmaTOFKa) < trkselOptions.cfgCutNsigma;
     const bool isProtonTOF = std::abs(nsigmaTOFPr) < trkselOptions.cfgCutNsigma;
 
-    if (!mcParticle.isPhysicalPrimary()) { // Is not physical primary
-      if (mcParticle.getProcess() == kPDecay) {  // Is from decay
+    if (!mcParticle.isPhysicalPrimary()) {      // Is not physical primary
+      if (mcParticle.getProcess() == kPDecay) { // Is from decay
         if (includeCentralityMC) {
           if (includeCentralityMC) {
             histos.fill(HIST(hpt_num_str[i]), track.pt(), multiplicity, track.dcaXY());
@@ -2701,12 +2696,12 @@ struct SpectraTOF {
   }
   PROCESS_SWITCH(SpectraTOF, processMCgen, "process generated MC", false);
   void processMCgenRecoEvs(soa::Join<TrackCandidates,
-                                      aod::pidTPCFullPi, aod::pidTPCFullKa, aod::pidTPCFullPr,
-                                      aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr> const& tracks,
-                            aod::McTrackLabels const& mcTrackLabels,
-                            GenMCCollisions const&,
-                            RecoMCCollisions const& collisions,
-                            aod::McParticles const& mcParticles)
+                                     aod::pidTPCFullPi, aod::pidTPCFullKa, aod::pidTPCFullPr,
+                                     aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr> const& tracks,
+                           aod::McTrackLabels const& mcTrackLabels,
+                           GenMCCollisions const&,
+                           RecoMCCollisions const& collisions,
+                           aod::McParticles const& mcParticles)
   {
     for (const auto& collision : collisions) {
       if (!collision.has_mcCollision()) {
@@ -2820,7 +2815,7 @@ struct SpectraTOF {
       const auto& mcLabel = mcTrackLabels.iteratorAt(track.globalIndex());
       const auto& mcParticle = mcParticles.iteratorAt(mcLabel.mcParticleId());
       int pdgCode = mcParticle.pdgCode();
-      static_for<2, 4>([&](auto par) { //for pi, K, p only
+      static_for<2, 4>([&](auto par) { // for pi, K, p only
         const auto& nsigmaTPCpar = o2::aod::pidutils::tpcNSigma<par>(track);
         bool isTPCpar = std::abs(nsigmaTPCpar) < trkselOptions.cfgCutNsigma;
         // Precompute rapidity values to avoid redundant calculations
